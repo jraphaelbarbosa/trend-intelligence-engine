@@ -1,0 +1,91 @@
+# ============================================================
+# TREND INTELLIGENCE ENGINE - PILOT CONFIG (WORLD CUP 2026)
+# ============================================================
+
+theme:
+  name: "Copa do Mundo 2026"
+  description: "Monitoramento de tendências de conteúdo sobre a Copa do Mundo FIFA 2026"
+
+search:
+  date_start: "2026-01-01"
+  max_videos_per_subtopic: 15
+  order_by: "viewCount"   # viewCount (top), date (recentes), relevance (relevância)
+  min_views: 30000        # Filtro de corte para canais de médio a grande porte
+  min_engagement_ratio: 0.001 # Pelo menos 0.1% de comentários por visualização
+  
+  advanced_metrics:
+    enabled: true
+    recent_video_days: 7      
+    recent_min_views: 5000    
+    min_views_per_day: 1500   
+    recent_min_views_per_day: 700 
+
+  regions:
+    - code: "BR"
+      language: "pt"
+      label: "Brasil"
+
+subtopics:
+  - id: figurinhas
+    name: "Figurinhas da Copa 2026"
+    keywords:
+      - "desafio album da copa 2026"
+      - "gastando figurinhas copa 2026"
+      - "album copa 2026 completo"
+      - "figurinha rara copa 2026"
+    analysis_angle: >
+      Analise como os criadores engajam a comunidade de colecionadores.
+      Busque padrões de formato (ex: unboxing absurdo, react a figurinhas caras) e o que o público
+      mais comenta (preços abusivos, táticas para completar, frustrações).
+
+  - id: tatica
+    name: "Tática e React de Jogos"
+    keywords:
+      - "react seleção brasileira copa 2026"
+      - "análise tática brasil copa 2026"
+      - "porque o brasil vai perder 2026"
+    analysis_angle: >
+      Identifique como o criador prende a atenção durante análises lentas (cortes rápidos, lousa, meme).
+      O público está desesperançoso ou otimista? Quais as dores táticas que o brasileiro mais comenta?
+
+  - id: duvidas
+    name: "Drama e Especulação de Convocação"
+    keywords:
+      - "neymar fora da copa 2026"
+      - "lista vazada copa 2026"
+      - "injustiçados seleção 2026"
+    analysis_angle: >
+      Mapeie a narrativa de "drama" do criador. Ele usa tom de denúncia, revolta ou fofoca?
+      Quais nomes o público mais pede nos comentários? Extraia o sentimento popular sobre a panela da seleção.
+
+  - id: polemicas
+    name: "Polêmicas da FIFA e Custos"
+    keywords:
+      - "ingresso absurdo copa 2026"
+      - "boicote copa 2026"
+      - "vergonha fifa copa 2026"
+    analysis_angle: >
+      O vídeo é sobre os custos absurdos para viajar pra Copa ou corrupção? Como o criador inflama a audiência?
+      O público concorda com a revolta? Capture as reclamações mais frequentes nos comentários.
+
+  - id: influencers
+    name: "Criadores em Ascensão"
+    keywords:
+      - "vlog estadio copa 2026"
+      - "cobrir a copa 2026 youtuber"
+      - "projeto copa 2026 influenciador"
+    analysis_angle: >
+      Mapeie os bastidores de youtubers tentando "surfar" a Copa. Quais estratégias de engajamento
+      (vlog estilo MrBeast, desafio, viagem) eles usam? O público elogia a edição ou a jornada?
+
+analysis:
+  model: "gemini-2.5-flash"
+  base_context: >
+    Você é um estrategista de conteúdo dissecando a 'Creator Economy' focada na Copa do Mundo 2026.
+    Seu objetivo não é olhar para as marcas grandes, mas para os CRIADORES DE CONTEÚDO independentes.
+    Você deve mapear: 1) A narrativa e o assunto do vídeo. 2) O formato e padrão do criador.
+    3) A visão real do público nos comentários (curiosidades, costumes, dores).
+    Transforme isso em inteligência acionável para identificar "Assuntos Quentes" (Hot Topics).
+
+monday:
+  board_id: 18413482266

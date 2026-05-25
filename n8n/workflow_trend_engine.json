@@ -1,0 +1,297 @@
+{
+  "updatedAt": "2026-05-22T08:25:03.932Z",
+  "createdAt": "2026-05-22T06:00:28.090Z",
+  "id": "YIggCwTdhsTDzny4",
+  "name": "Trend Intelligence - Cloud Engine (Official)",
+  "description": "Production orquestrator with modular Python execution and Monday.com integration",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 2
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-id",
+      "name": "Schedule Trigger (02:00 AM)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "command": "\"/data/project/venv/bin/python3\" \"/data/project/src/collector.py\""
+      },
+      "id": "collector-id",
+      "name": "1. YouTube API Collector",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "command": "\"/data/project/venv/bin/python3\" \"/data/project/src/scraper.py\""
+      },
+      "id": "scraper-id",
+      "name": "2. Comment Scraper",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        0,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "command": "\"/data/project/venv/bin/python3\" \"/data/project/src/analyzer.py\""
+      },
+      "id": "analyzer-id",
+      "name": "3. AI Video Analyzer",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "command": "\"/data/project/venv/bin/python3\" \"/data/project/src/fetcher.py\""
+      },
+      "id": "fetch-id",
+      "name": "4. Fetch Pending Analyses",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        400,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawStdout = $input.first().json.stdout;\ntry {\n  return JSON.parse(rawStdout);\n} catch (e) {\n  return [];\n}"
+      },
+      "id": "parse-id",
+      "name": "5. Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        600,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-id",
+      "name": "5. Loop de Videos",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        800,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.monday.com/v2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $env.MONDAY_API_TOKEN }}"
+            },
+            {
+              "name": "API-Version",
+              "value": "2023-10"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"query\": \"mutation ($boardId: ID!, $groupId: String!, $itemName: String!, $columnValues: JSON!) { create_item (board_id: $boardId, group_id: $groupId, item_name: $itemName, column_values: $columnValues, create_labels_if_missing: true) { id } }\",\n  \"variables\": {\n    \"boardId\": \"18413482266\",\n    \"groupId\": $('5. Loop de Videos').item.json.monday_group_id,\n    \"itemName\": $('5. Loop de Videos').item.json.monday_content_title,\n    \"columnValues\": JSON.stringify(typeof $('5. Loop de Videos').item.json.monday_column_values === 'string' ? JSON.parse($('5. Loop de Videos').item.json.monday_column_values) : $('5. Loop de Videos').item.json.monday_column_values)\n  }\n} }}"
+      },
+      "id": "create-item-node-id",
+      "name": "6. Create Monday Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1000,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.monday.com/v2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $env.MONDAY_API_TOKEN }}"
+            },
+            {
+              "name": "API-Version",
+              "value": "2023-10"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"query\": \"mutation ($itemId: ID!, $body: String!) { create_update (item_id: $itemId, body: $body) { id } }\",\n  \"variables\": {\n    \"itemId\": $json.data.create_item.id,\n    \"body\": $('5. Loop de Videos').item.json.monday_update_body\n  }\n} }}"
+      },
+      "id": "create-update-node-id",
+      "name": "6b. Create Monday Update",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "command": "\"/data/project/venv/bin/python3\" \"/data/project/src/mark_as_exported.py\" --id=\"{ $('5. Loop de Videos').item.json.analysis_id }\""
+      },
+      "id": "mark-id",
+      "name": "7. Mark DB Exported",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        50
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (02:00 AM)": {
+      "main": [
+        [
+          {
+            "node": "1. YouTube API Collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. YouTube API Collector": {
+      "main": [
+        [
+          {
+            "node": "2. Comment Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Comment Scraper": {
+      "main": [
+        [
+          {
+            "node": "3. AI Video Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. AI Video Analyzer": {
+      "main": [
+        [
+          {
+            "node": "4. Fetch Pending Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Fetch Pending Analyses": {
+      "main": [
+        [
+          {
+            "node": "5. Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "5. Loop de Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Loop de Videos": {
+      "main": [
+        [
+          {
+            "node": "6. Create Monday Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Create Monday Item": {
+      "main": [
+        [
+          {
+            "node": "6b. Create Monday Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6b. Create Monday Update": {
+      "main": [
+        [
+          {
+            "node": "7. Mark DB Exported",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Mark DB Exported": {
+      "main": [
+        [
+          {
+            "node": "5. Loop de Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

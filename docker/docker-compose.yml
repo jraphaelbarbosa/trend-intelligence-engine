@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  n8n:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: trend_n8n_engine
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      # Pass through environment variables from the host .env file
+      - DATABASE_URL=${DATABASE_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - MONDAY_API_TOKEN=${MONDAY_API_TOKEN}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Mount directories for live development updates relative to parent root
+      - ../src:/data/project/src
+      - ../.env:/data/project/.env
+
+volumes:
+  n8n_data:
